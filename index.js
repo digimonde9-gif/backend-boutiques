@@ -55,3 +55,6 @@ app.get("/api/health", async (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Backend démarré sur le port ${PORT}`);
 });
+app.get("/", (req, res) => {
+  res.json({ status: "Backend OK 🚀" });
+});
