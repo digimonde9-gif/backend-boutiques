@@ -23,14 +23,14 @@ const db = mysql.createPool({
 (async () => {
   try {
     const connection = await db.getConnection();
-    console.log("✅ Connexion MySQL réussie avec Hostinger");
+    console.log("✅ Connexion MySQL réussie (Railway)");
     connection.release();
   } catch (error) {
     console.error("❌ Erreur de connexion MySQL");
-    console.error("Message :", error.message);
-    console.error("Code :", error.code);
+    console.error(error); // 👈 IMPORTANT
   }
 })();
+
 
 // ===============================
 // EXPORT (pour la suite de l'app)
