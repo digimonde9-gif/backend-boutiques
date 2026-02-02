@@ -11,32 +11,29 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 8080;
 
-// 🔹 Pool MySQL Railway
+// ✅ POOL MYSQL UNIQUE
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQLDATABASE,
+  database: process.env.MYSQLDATABASE, // railway
   port: Number(process.env.MYSQLPORT),
   waitForConnections: true,
-  connectionLimit: 5,
+  connectionLimit: 10,
 });
 
-// 🔹 Rendre le pool accessible aux routes
-app.locals.db = pool;
-
-// 🔹 Test DB au démarrage
+// 🔍 Test DB au démarrage
 (async () => {
   try {
-    const connection = await pool.getConnection();
-    console.log("✅ MySQL Railway CONNECTÉ");
-    connection.release();
+    const conn = await pool.getConnection();
+    console.log("✅ MySQL connecté à la base:", process.env.MYSQLDATABASE);
+    conn.release();
   } catch (err) {
-    console.error("❌ ERREUR MYSQL", err.message);
+    console.error("❌ ERREUR MYSQL:", err.message);
   }
 })();
 
-// 🔹 Route racine (test)
+// 🔹 Route test racine
 app.get("/", (req, res) => {
   res.json({
     status: "OK",
@@ -44,11 +41,24 @@ app.get("/", (req, res) => {
   });
 });
 
-// 🔹 Routes API (OBLIGATOIRE AVANT app.listen)
-app.use("/api/auth", authRoutes);
-app.use("/api/stores", storeRoutes);
+// 🔹 Health DB
+app.get("/api/health", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SHOW TABLES");
+    res.json({
+      db: "connected",
+      tables: rows.length,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
-// 🔹 Lancement du serveur (UNE SEULE FOIS)
+// 🔹 ROUTES (AVEC POOL)
+app.use("/api/auth", authRoutes(pool));
+app.use("/api/stores", storeRoutes(pool));
+
+// 🚀 START SERVER
 app.listen(PORT, () => {
   console.log(`🚀 Backend démarré sur le port ${PORT}`);
 });
