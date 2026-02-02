@@ -1,14 +1,28 @@
+// ===============================
+// IMPORTS
+// ===============================
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
 
+const authRoutes = require("./routes/auth.routes");
+const storeRoutes = require("./routes/stores.routes");
+
+// ===============================
+// APP EXPRESS
+// ===============================
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ===============================
+// CONFIG PORT
+// ===============================
 const PORT = process.env.PORT || 3000;
 
-// 🔹 Pool MySQL Railway
+// ===============================
+// MYSQL POOL (Railway)
+// ===============================
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -19,7 +33,9 @@ const pool = mysql.createPool({
   connectionLimit: 5,
 });
 
-// 🔹 Test DB au démarrage
+// ===============================
+// TEST MYSQL AU DÉMARRAGE
+// ===============================
 (async () => {
   try {
     const connection = await pool.getConnection();
@@ -30,7 +46,11 @@ const pool = mysql.createPool({
   }
 })();
 
-// 🔹 Route de test (OBLIGATOIRE)
+// ===============================
+// ROUTES
+// ===============================
+
+// Route test
 app.get("/", (req, res) => {
   res.json({
     status: "OK",
@@ -38,7 +58,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// 🔹 Exemple route API
+// Health check DB
 app.get("/api/health", async (req, res) => {
   try {
     const [rows] = await pool.query("SHOW TABLES");
@@ -51,10 +71,18 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-// 🔹 LANCEMENT DU SERVEUR (LA LIGNE LA PLUS IMPORTANTE)
+// Routes métiers
+app.use("/api/auth", authRoutes);
+app.use("/api/stores", storeRoutes);
+
+// ===============================
+// START SERVER (UNE SEULE FOIS)
+// ===============================
 app.listen(PORT, () => {
   console.log(`🚀 Backend démarré sur le port ${PORT}`);
 });
-app.get("/", (req, res) => {
-  res.json({ status: "Backend OK 🚀" });
-});
+
+// ===============================
+// EXPORT POOL (pour les routes)
+// ===============================
+module.exports = pool;
