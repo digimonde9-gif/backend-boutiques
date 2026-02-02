@@ -1,6 +1,3 @@
-// ===============================
-// IMPORTS
-// ===============================
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
@@ -8,21 +5,13 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth.routes");
 const storeRoutes = require("./routes/stores.routes");
 
-// ===============================
-// APP EXPRESS
-// ===============================
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ===============================
-// CONFIG PORT
-// ===============================
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
-// ===============================
-// MYSQL POOL (Railway)
-// ===============================
+// 🔹 Pool MySQL Railway
 const pool = mysql.createPool({
   host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
@@ -33,9 +22,10 @@ const pool = mysql.createPool({
   connectionLimit: 5,
 });
 
-// ===============================
-// TEST MYSQL AU DÉMARRAGE
-// ===============================
+// 🔹 Rendre le pool accessible aux routes
+app.locals.db = pool;
+
+// 🔹 Test DB au démarrage
 (async () => {
   try {
     const connection = await pool.getConnection();
@@ -46,11 +36,7 @@ const pool = mysql.createPool({
   }
 })();
 
-// ===============================
-// ROUTES
-// ===============================
-
-// Route test
+// 🔹 Route racine (test)
 app.get("/", (req, res) => {
   res.json({
     status: "OK",
@@ -58,31 +44,11 @@ app.get("/", (req, res) => {
   });
 });
 
-// Health check DB
-app.get("/api/health", async (req, res) => {
-  try {
-    const [rows] = await pool.query("SHOW TABLES");
-    res.json({
-      db: "connected",
-      tables: rows.length,
-    });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Routes métiers
+// 🔹 Routes API (OBLIGATOIRE AVANT app.listen)
 app.use("/api/auth", authRoutes);
 app.use("/api/stores", storeRoutes);
 
-// ===============================
-// START SERVER (UNE SEULE FOIS)
-// ===============================
+// 🔹 Lancement du serveur (UNE SEULE FOIS)
 app.listen(PORT, () => {
   console.log(`🚀 Backend démarré sur le port ${PORT}`);
 });
-
-// ===============================
-// EXPORT POOL (pour les routes)
-// ===============================
-module.exports = pool;
