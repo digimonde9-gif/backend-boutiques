@@ -1,38 +1,29 @@
-// ===============================
-// IMPORTS
-// ===============================
 const mysql = require("mysql2/promise");
 
-// ===============================
-// CONFIGURATION MYSQL
-// ===============================
-const db = mysql.createPool({
-  host: process.env.DB_HOST,       // ex: srv2121.hstgr.io
-  user: process.env.DB_USER,       // ex: u224983997_logoappci
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,   // ex: u224983997_logoapp
-  port: process.env.DB_PORT || 3306,
+console.log("🔍 MYSQLHOST =", process.env.MYSQLHOST);
+console.log("🔍 MYSQLPORT =", process.env.MYSQLPORT);
+
+const pool = mysql.createPool({
+  host: process.env.MYSQLHOST,       // ⛔ PAS localhost
+  user: process.env.MYSQLUSER,
+  password: process.env.MYSQLPASSWORD,
+  database: process.env.MYSQLDATABASE,
+  port: Number(process.env.MYSQLPORT),
   waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+  connectionLimit: 5,
+  queueLimit: 0
 });
 
-// ===============================
-// TEST DE CONNEXION MYSQL
-// ===============================
 (async () => {
   try {
-    const connection = await db.getConnection();
-    console.log("✅ Connexion MySQL réussie (Railway)");
+    const connection = await pool.getConnection();
+    console.log("✅ MySQL Railway CONNECTÉ");
     connection.release();
-  } catch (error) {
-    console.error("❌ Erreur de connexion MySQL");
-    console.error(error); // 👈 IMPORTANT
+  } catch (err) {
+    console.error("❌ ERREUR MYSQL DÉTAILLÉE");
+    console.error("Code:", err.code);
+    console.error("Message:", err.message);
+    console.error("Host:", process.env.MYSQLHOST);
+    console.error("Port:", process.env.MYSQLPORT);
   }
 })();
-
-
-// ===============================
-// EXPORT (pour la suite de l'app)
-// ===============================
-module.exports = db;
