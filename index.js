@@ -1,33 +1,57 @@
+const express = require("express");
 const mysql = require("mysql2/promise");
-const { initDatabase } = require("./db-init");
+const cors = require("cors");
 
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-console.log("🔍 MYSQLHOST =", process.env.MYSQLHOST);
-console.log("🔍 MYSQLPORT =", process.env.MYSQLPORT);
+const PORT = process.env.PORT || 3000;
 
+// 🔹 Pool MySQL Railway
 const pool = mysql.createPool({
-  host: process.env.MYSQLHOST,       // ⛔ PAS localhost
+  host: process.env.MYSQLHOST,
   user: process.env.MYSQLUSER,
   password: process.env.MYSQLPASSWORD,
-  database: process.env.MYSQL_DATABASE,
+  database: process.env.MYSQLDATABASE,
   port: Number(process.env.MYSQLPORT),
   waitForConnections: true,
   connectionLimit: 5,
-  queueLimit: 0
 });
 
+// 🔹 Test DB au démarrage
 (async () => {
   try {
     const connection = await pool.getConnection();
     console.log("✅ MySQL Railway CONNECTÉ");
     connection.release();
-    
-    await initDatabase(pool);
   } catch (err) {
-    console.error("❌ ERREUR MYSQL DÉTAILLÉE");
-    console.error("Code:", err.code);
-    console.error("Message:", err.message);
-    console.error("Host:", process.env.MYSQLHOST);
-    console.error("Port:", process.env.MYSQLPORT);
+    console.error("❌ ERREUR MYSQL", err.message);
   }
 })();
+
+// 🔹 Route de test (OBLIGATOIRE)
+app.get("/", (req, res) => {
+  res.json({
+    status: "OK",
+    message: "Backend-boutiques opérationnel 🚀",
+  });
+});
+
+// 🔹 Exemple route API
+app.get("/api/health", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SHOW TABLES");
+    res.json({
+      db: "connected",
+      tables: rows.length,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 🔹 LANCEMENT DU SERVEUR (LA LIGNE LA PLUS IMPORTANTE)
+app.listen(PORT, () => {
+  console.log(`🚀 Backend démarré sur le port ${PORT}`);
+});
