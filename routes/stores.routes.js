@@ -1,21 +1,21 @@
 const express = require("express");
-const pool = require("../db");
 
-const router = express.Router();
+module.exports = (pool) => {
+  const router = express.Router();
 
-router.get("/:merchantId", async (req, res) => {
-  const { merchantId } = req.params;
+  // 📦 LISTE DES BOUTIQUES
+  router.get("/", async (req, res) => {
+    try {
+      const [rows] = await pool.query("SELECT * FROM stores");
+      res.json(rows);
+    } catch (error) {
+      console.error("❌ ERREUR STORES:", error.message);
+      res.status(500).json({
+        message: "Erreur serveur",
+        error: error.message
+      });
+    }
+  });
 
-  try {
-    const [rows] = await pool.query(
-      "SELECT * FROM stores WHERE merchant_id = ?",
-      [merchantId]
-    );
-
-    res.json(rows);
-  } catch (err) {
-    res.status(500).json({ message: "Erreur serveur" });
-  }
-});
-
-module.exports = router;
+  return router;
+};
