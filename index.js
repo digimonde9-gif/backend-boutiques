@@ -1,3 +1,4 @@
+console.log("DB UTILISÉE =", process.env.MYSQLDATABASE);
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
